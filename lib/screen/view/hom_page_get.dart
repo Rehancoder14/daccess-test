@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:daccesstest/screen/controller/home_controller.dart';
 import 'package:daccesstest/screen/repository/home_repository.dart';
 import 'package:daccesstest/screen/view/component/data_tile.dart';
 import 'package:daccesstest/screen/view/home_page_form.dart';
@@ -37,12 +38,28 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: ListView.builder(
-        itemCount: 1,
-        itemBuilder: (context, index) {
-          return const DataTile();
-        },
-      ),
+      body: GetX<HomeController>(builder: (controller) {
+        return controller.isLoading.value
+            ? Center(
+                child: CircularProgressIndicator(),
+              )
+            : ListView.builder(
+                itemCount: controller.groupModel.length,
+                itemBuilder: (context, index) {
+                  return DataTile(
+                    command:
+                        controller.groupModel[index]['command'] ?? 'null value',
+                    activityDate: controller.groupModel[index]
+                            ['activityDate'] ??
+                        'null value',
+                    thought: controller.groupModel[index]['thaoughtOfDay'] ??
+                        'null value',
+                    aLink: '${controller.groupModel[index]['birthdayCard']}',
+                    bLink: '${controller.groupModel[index]['anniversaryCard']}',
+                  );
+                },
+              );
+      }),
     );
   }
 }

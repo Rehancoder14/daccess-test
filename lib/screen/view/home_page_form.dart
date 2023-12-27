@@ -25,7 +25,7 @@ class _HomePageFormState extends State<HomePageForm> {
         child: Column(
           children: [
             TextFormField(
-              controller: TextEditingController(),
+              controller: controller.commandController,
               decoration: InputDecoration(
                 hintText: '   Command',
                 border: OutlineInputBorder(
@@ -59,7 +59,11 @@ class _HomePageFormState extends State<HomePageForm> {
               height: 10,
             ),
             TextFormField(
-              controller: TextEditingController(),
+              controller: controller.activityDateController,
+              readOnly: true,
+              onTap: () {
+                controller.pickDate(context);
+              },
               decoration: InputDecoration(
                 hintText: '   Activity Date',
                 fillColor: Colors.grey.shade300,
@@ -92,7 +96,7 @@ class _HomePageFormState extends State<HomePageForm> {
               height: 10,
             ),
             TextFormField(
-              controller: TextEditingController(),
+              controller: controller.thoughtController,
               decoration: InputDecoration(
                 hintText: '   thought of the day',
                 border: OutlineInputBorder(
@@ -126,11 +130,17 @@ class _HomePageFormState extends State<HomePageForm> {
             ),
             ElevatedButton(
                 onPressed: () {
+                  controller.fileUploadWelcome();
+                },
+                child: Text('Select image for welcome card')),
+            SizedBox(
+              height: 10,
+            ),
+            ElevatedButton(
+                onPressed: () {
                   controller.fileUploadBirthday();
                 },
-                child: Text(controller.file != null
-                    ? controller.file!.name.split('.').last
-                    : 'Select image for birthday card')),
+                child: Text('Select image for birthday card')),
             SizedBox(
               height: 10,
             ),
@@ -138,9 +148,7 @@ class _HomePageFormState extends State<HomePageForm> {
                 onPressed: () {
                   controller.fileUploadAnniversary();
                 },
-                child: Text(controller.anniversaryfile != null
-                    ? controller.anniversaryfile!.name.split('.').last
-                    : 'Select image for anniversary card'))
+                child: Text('Select image for anniversary card'))
           ],
         ),
       ),
