@@ -1,63 +1,99 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:daccesstest/constant/apiconstant.dart';
-import 'package:daccesstest/service/api_service.dart';
-import 'package:dio/dio.dart';
-import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
+import 'package:mime/mime.dart';
 
 class HomeRepository {
   HomeRepository._();
 
   static final HomeRepository instance = HomeRepository._();
 
-  final _apiService = Get.find<ApiService>();
-  Future<void> getData() async {
+  Future<void> fetchData() async {
+    log('check');
     try {
-      final response = await _apiService.get(ApiConstant.getApi);
-      log(response.toString());
+      final response = await http.get(
+        Uri.parse(ApiConstant.baseUrl + ApiConstant.getApi),
+      );
+
       if (response.statusCode == 200) {
-        return response.data;
+        // Decode the response from Base64
+        final decodedData = utf8.decode(base64.decode(response.body));
+
+        // Process the decoded data as needed
+        print(decodedData);
       } else {
-        return response.data;
+        print('Failed to fetch data. Status code: ${response.statusCode}');
+        print('Response: ${response.body}');
       }
-    } catch (e) {
-      if (e is DioError) {
-        rethrow;
+    } catch (error) {
+      if (error is TimeoutException) {
+        print('Request timed out');
+      } else if (error is SocketException) {
+        log('Error $error');
+      } else {
+        print('Error: $error');
       }
-      rethrow;
     }
   }
 
-  // Future<void> postData(String dataToPost) async {
-  //   // Replace 'YOUR_API_URL' with the actual API endpoint
-  //   final apiUrl = 'YOUR_API_URL';
+  Future<void> postData({
+    required String command,
+    required String activityDate,
+    required String thought,
+    PlatformFile? bFile,
+    PlatformFile? aFile,
+  }) async {
+    var param = {
+      "Command": command,
+      "ActivityDate": activityDate,
+      "ThaoughtOfDay": thought,
+    };
 
-  //   try {
-  //     // Encode the data to Base64
-  //     String base64EncodedData = base64.encode(utf8.encode(dataToPost));
+    if (bFile != null) {
+      // Add BirthdayCard as a file
+      param["BirthdayCard"] = (await http.MultipartFile.fromPath(
+        'BirthdayCard',
+        bFile.path!,
+        filename: bFile.name,
+        contentType: MediaType.parse(lookupMimeType(bFile.path!)!),
+      )) as String;
+    }
 
-  //     // Make the POST request with the encoded data
-  //     final response = await http.post(
-  //       Uri.parse(apiUrl),
-  //       headers: {
-  //         'Content-Type':
-  //             'application/json', // Adjust the content type if needed
-  //       },
-  //       body: jsonEncode({'data': base64EncodedData}),
-  //     );
+    if (aFile != null) {
+      // Add WelcomeCard as a file
+      param["WelComeCard"] = (await http.MultipartFile.fromPath(
+        'WelComeCard',
+        aFile.path!,
+        filename: aFile.name,
+        contentType: MediaType.parse(lookupMimeType(aFile.path!)!),
+      )) as String;
+    }
 
-  //     if (response.statusCode == 200) {
-  //       // Handle the successful response as needed
-  //       log('Post request successful');
-  //       log('Response: ${response.body}');
-  //     } else {
-  //       // Handle errors
-  //       log('Failed to make the POST request. Status code: ${response.statusCode}');
-  //       log('Response: ${response.body}');
-  //     }
-  //   } catch (error) {
-  //     // Handle network or encoding errors
-  //     log('Error: $error');
-  //   }
-  // }
+    try {
+      var response = await http.post(
+        Uri.parse(ApiConstant.baseUrl + ApiConstant.postApi),
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        body: param,
+      );
+
+      if (response.statusCode == 200) {
+        // Handle the successful response as needed
+        log('Post request successful');
+        log('Response: ${response.body}');
+      } else {
+        log('Failed to make the POST request. Status code: ${response.statusCode}');
+        log('Response: ${response.body}');
+      }
+    } catch (error) {
+      log('Error: $error');
+    }
+  }
 }
